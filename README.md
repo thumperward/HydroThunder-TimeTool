@@ -30,7 +30,7 @@ You can then image the drive back but it would be better to only write the score
 TODO - provide example
 
 ## "CMOS" Data area details
-The data area that contains the high score table is towards the end of the HDD in an unformatted area, is internally referred to as "cmos" in _HYDRO.EXE_ (1.00d). This CMOS area also contains other data that has not yet been decoded. 
+The data area that contains the high score table is towards the end of the HDD in an unformatted area, is internally referred to as "cmos" in _HYDRO.EXE_ (1.00d). This CMOS area also contains other data that has not yet been decoded.
 
 This data (or a checksum of it) may also be stored in the PC motherboard battery backed CMOS memory and flushed periodically to the non-volatile HDD, further reverse engineering required to determine this.
 
@@ -49,7 +49,7 @@ This data (or a checksum of it) may also be stored in the PC motherboard battery
 #### CMOS area structure (1.00d)
 
 ```
-Offset (1.00d)| Description 
+Offset (1.00d)| Description
 --------------|--------------------------------------------------------------------------------------------------------
 0000h         | Start of CMOS area (01 00 00 00 98 BA DC FE 01)
 0000h - 0063h | Unknown, some changes between 1.00d & 1.01b, suspect settings
