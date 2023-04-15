@@ -12,10 +12,11 @@ readme = "README.md"
 packages = [{include = "httt"}]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = ">=3.7.2"
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "^2.0.2"
+pylint = "^2.17.2"
 
 [tool.poetry.scripts]
 httt = "httt:main"
