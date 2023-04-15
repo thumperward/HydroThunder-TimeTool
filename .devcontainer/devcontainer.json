@@ -17,6 +17,7 @@
 	// "features": {},
 	"postStartCommand": {
 		"workspace-trust": "git config --global --add safe.directory ${containerWorkspaceFolder} && sleep 1",
-		"pre-commit": "pre-commit install"
+		"pre-commit": "pre-commit install",
+		"poetry": "poetry install"
 	}
 }

@@ -202,7 +202,7 @@ class Drive:
                 r.seek(read_drive.blocks[args.block])
                 w.seek(write_drive.blocks[args.block])
                 for section, byte_count in ht.data.section_bytes.items():
-                    if section == "splits" and read_drive.split_bytes is not None:
+                    if section == "splits" and read_drive.split_bytes:
                         w.write(read_drive.split_bytes)
                         r.seek(byte_count, 1)
                     elif (
@@ -264,7 +264,6 @@ def checksum_calc(drive):
 def csv_write(data, header, csv_file):
     with open(str(csv_file), 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=header)
-
         writer.writeheader()
         for row in data:
             writer.writerow(row)
@@ -279,12 +278,13 @@ def print_input_error():
     sys.exit(1)
 
 
-def main():
-
+def print_usage():
     parser = argparse.ArgumentParser(
         prog='Hydro Thunder Time Tool',
-        description='Reads and writes data for track times, split times, and' +
-        'settings for a Hydro Thunder Arcade machine\'s hard drive.',
+        description="""
+        Reads and writes data for track times, split times, and
+        settings for a Hydro Thunder Arcade machine's hard drive.
+        """,
         epilog='Hey, you found a secret!')
 
     parser.add_argument('filename', nargs='?')
@@ -312,8 +312,42 @@ def main():
                         help='List track names in game\'s stored order')
     parser.add_argument('--lsb_offset', default=0, type=int,
                         help='Fine tune checksum LSB value which can slightly vary')
+
+    return parser.parse_args()
+
+
+def write_raw(args, read_drive):
+    write_filename = args.write_raw
+    # if os.path.isfile(write_filename):
+    #    # Update existing file
+    #    with open(read_drive.filename, "rb") as r:
+    #        with open(write_filename, "r+b") as w:
+    #            #TODO - Add update file in place with minimal writes
+    #            print("nope")
+    # else:
+    #     Write new file
+    with open(read_drive.filename, "rb") as r:
+        with open(write_filename, "wb") as w:
+            r.seek(read_drive.blocks[args.block])
+            for section, byte_count in ht.data.section_bytes.items():
+                if section == "splits" and read_drive.split_bytes:
+                    w.write(read_drive.split_bytes)
+                    r.seek(byte_count, 1)
+                elif (
+                    section == "splits"
+                    or section == "times"
+                    and read_drive.time_bytes is None
+                    or section != "times"
+                ):
+                    w.write(r.read(byte_count))
+                else:
+                    w.write(read_drive.time_bytes)
+                    r.seek(byte_count, 1)
+
+
+def main():
     # Run argument parsing
-    args = parser.parse_args()
+    args = print_usage()
 
     if args.boats:
         for boat in ht.iboats:
@@ -321,84 +355,37 @@ def main():
         sys.exit(0)
 
     if args.map_names:
-        for key, track in ht.tracks.items():
+        for _, track in ht.tracks.items():
             print(track)
         sys.exit(0)
 
-    if args.read is None and args.write is None and args.write_raw is None:
+    if not args.read and not args.write and not args.write_raw:
         print_input_error()
-    if args.write is not None:
-        print(f"Init Write: {args.write}")
-        write_drive = Drive(args.write)
-        if args.read is None:
-            print(f"Init Read: {args.write}")
-            read_drive = Drive(args.write)
-    else:
-        write_drive = None
 
-    if args.read is not None or args.write is not None:
-        if read_drive is None:
-            print(f"Init Read: {args.read}")
-            read_drive = Drive(args.read)
-        read_drive.read_times()
-        read_drive.read_splits()
+    write_drive = Drive(args.write) if args.write else None
+    read_drive = Drive(args.read) if args.read else Drive(args.write)
 
-        if args.times is not None:
-            if args.write is None and args.write_raw is None:
-                csv_write(read_drive.times, [
-                    "Track", "Initials", "Boat", "Timestamp"], args.times)
-            else:
-                read_drive.load_times(args.times)
+    read_drive.read_times()
+    read_drive.read_splits()
 
-        if args.splits is not None:
-            if args.write is None and args.write_raw is None:
-                csv_write(read_drive.splits, [
-                    "Track", "Split 1", "Split 2", "Split 3", "Split 4", "Split 5"], args.splits)
-            else:
-                read_drive.load_splits(args.splits)
+    if args.times:
+        if args.write or args.write_raw:
+            read_drive.load_times(args.times)
+        else:
+            csv_write(read_drive.times, [
+                "Track", "Initials", "Boat", "Timestamp"], args.times)
 
-            # Add else to use write drive as read if data CSV provided
-    else:
-        read_drive = None
+    if args.splits:
+        if args.write or args.write_raw:
+            read_drive.load_splits(args.splits)
+        else:
+            csv_write(read_drive.splits, [
+                "Track", "Split 1", "Split 2", "Split 3", "Split 4", "Split 5"], args.splits)
 
-    # bytes_times = read_drive.byte_times()
-    # bytes_splits = read_drive.byte_splits()
-
-    if args.write is not None:
+    if args.write:
         write_drive.write(read_drive)
         checksum_calc(write_drive)
 
-    if args.write_raw is not None:
-        write_filename = args.write_raw
-    #    if os.path.isfile(write_filename):
-    #        # Update existing file
-    #        with open(read_drive.filename, "rb") as r:
-    #            with open(write_filename, "r+b") as w:
-    #                #TODO - Add update file in place with minimal writes
-    #                print("nope")
-    #    else:
-        # Write new file
-        with open(read_drive.filename, "rb") as r:
-            with open(write_filename, "wb") as w:
-                # Seek to block
-                r.seek(read_drive.blocks[args.block])
-                for section, byte_count in ht.data.section_bytes.items():
-                    if (
-                        section == "splits"
-                        and read_drive.split_bytes is not None
-                    ):
-                        w.write(read_drive.split_bytes)
-                        r.seek(byte_count, 1)
-                    elif (
-                        section == "splits"
-                        or section == "times"
-                        and read_drive.time_bytes is None
-                        or section != "times"
-                    ):
-                        w.write(r.read(byte_count))
-                    else:
-                        w.write(read_drive.time_bytes)
-                        r.seek(byte_count, 1)
-        checksum_calc(Drive(write_filename))
-
-    sys.exit(0)
+    if args.write_raw:
+        write_raw(args, read_drive)
+        checksum_calc(Drive(args.write_raw))
