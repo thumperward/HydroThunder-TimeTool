@@ -1,0 +1,22 @@
+{
+	"name": "Debian",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"bungcip.better-toml",
+				"ms-azuretools.vscode-docker",
+				"ms-python.python",
+				"redhat.vscode-yaml",
+				"timonwong.shellcheck"
+			]
+		}
+	},
+	// "features": {},
+	"postStartCommand": {
+		"workspace-trust": "git config --global --add safe.directory ${containerWorkspaceFolder} && sleep 1",
+		"pre-commit": "pre-commit install"
+	}
+}
