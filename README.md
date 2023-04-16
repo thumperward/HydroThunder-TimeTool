@@ -132,6 +132,6 @@ Table structure:
 ## Roadmap
 
 * More documentation of hidden data
-* Provide exmaples of data
+* Provide examples of data
 * Determine how data validity check is done and impliment it for modified
   scores
