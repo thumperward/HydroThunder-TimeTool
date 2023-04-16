@@ -90,10 +90,11 @@ def checksum_calc(drive, args):
             drive.blocks[args.block]+FieldData.checksum_offset)
         file_to_check.write(checksum.to_bytes(4, "little", signed=False))
 
-        print("Checksum:")
-        print(f'Found: {checksum_stored.hex(" ")}')
         print(
-            f'Wrote: {checksum.to_bytes(4, "little", signed=False).hex(" ")}')
+            "Checksum:\n"
+            f'Found: {checksum_stored.hex(" ")}\n'
+            f'Wrote: {checksum.to_bytes(4, "little", signed=False).hex(" ")}'
+        )
 
         return checksum.to_bytes(4, "little", signed=False).hex(" ")
 

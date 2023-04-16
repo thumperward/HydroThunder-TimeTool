@@ -13,11 +13,13 @@ def print_input_error():
     """
     Print usage error.
     """
-    print("Error, Need at least one of the following to be set:\n")
-    print("    -r , --read")
-    print("    -w , --write")
-    print("         --write_raw\n")
-    print("Cannot build data map")
+    print(
+        "Error, Need at least one of the following to be set:\n"
+        "    -r , --read\n"
+        "    -w , --write\n"
+        "         --write_raw\n"
+        "Cannot build data map"
+    )
     sys.exit(1)
 
 
@@ -96,14 +98,16 @@ def main():
             read_drive.load_times(args.times, args)
         else:
             csv_write(read_drive.times, [
-                "Track", "Initials", "Boat", "Timestamp"], args.times)
+                "Track", "Initials", "Boat", "Timestamp"
+            ], args.times)
 
     if args.splits:
         if args.write or args.write_raw:
             read_drive.load_splits(args.splits, args)
         else:
             csv_write(read_drive.splits, [
-                "Track", "Split 1", "Split 2", "Split 3", "Split 4", "Split 5"], args.splits)
+                "Track", "Split 1", "Split 2", "Split 3", "Split 4", "Split 5"
+            ], args.splits)
 
     if args.write:
         write_drive.write(read_drive, args)

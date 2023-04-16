@@ -9,7 +9,7 @@ from .functions import get_file_size, btime, timeb, generic_write
 
 class Drive:
     """
-    Object for wrapping a drive, disk image, or raw data block
+    Object for wrapping a drive, disk image, or raw data block.
     """
 
     def __init__(self, filename, args):
@@ -136,8 +136,8 @@ class Drive:
         return self.split_bytes
         # print(self.split_bytes.hex(" "))
 
-    def write(self, read_drive, args):
+    def write(self, drive, args):
         """
         Write to drive.
         """
-        generic_write(read_drive.filename, self.filename, args)
+        generic_write(drive.filename, self.filename, args)
