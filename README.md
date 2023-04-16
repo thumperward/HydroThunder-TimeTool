@@ -22,7 +22,7 @@ reset all data when things go wrong.
 To read high score times run the program with the drive image as a parameter:
 
 ```sh
-python3 ./ht-time.py ./HT-HDD.img
+httt ./HT-HDD.img
 ```
 
 It will create a `HT-HDD.img.csv` file with all the high scores extracted.
@@ -31,7 +31,7 @@ To write high score times back to the drive image run the program with the
 drive image and CSV as a parameters: **!!NOT YET USABLE FOR REAL!!**
 
 ```sh
-python3 ./ht-time.py ./HT-HDD.img  ./HT-HDD.img.csv
+httt ./HT-HDD.img  ./HT-HDD.img.csv
 ```
 
 **NOTE:** Currently this version can write times back to the game but they fail
