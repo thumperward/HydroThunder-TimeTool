@@ -3,7 +3,7 @@ Drive structure.
 """
 
 import csv
-from .data import HydroThunder
+from .data import HydroThunder, FieldData
 from .functions import get_file_size, btime, timeb
 
 
@@ -16,13 +16,13 @@ class Drive:
         # May be filepath, drive block device, or raw
         self.filename = str(filename)
         self.size = int(get_file_size(self.filename))
-        self.raw = self.size <= HydroThunder.FieldData.size
+        self.raw = self.size <= FieldData.size
 
         self.blocks = [
             0 if self.raw else self.size -
-            HydroThunder.FieldData.start_offset[0],
+            FieldData.start_offset[0],
             0 if self.raw else self.size -
-            HydroThunder.FieldData.start_offset[1],
+            FieldData.start_offset[1],
         ]
 
         print(
@@ -42,9 +42,9 @@ class Drive:
         with open(self.filename, "rb") as file_to_read:
             # Seek to first initial in filename
             file_to_read.seek(
-                self.blocks[args.block]+HydroThunder.FieldData.times_offset)
+                self.blocks[args.block]+FieldData.times_offset)
             scores = 0
-            while scores < HydroThunder.FieldData.time_count:
+            while scores < FieldData.time_count:
                 boat = file_to_read.read(1)  # read boat
                 # print (boat_LUT[boat])
                 initials = str(file_to_read.read(3), "ascii")  # read initials
@@ -100,9 +100,9 @@ class Drive:
         with open(self.filename, "rb") as file_to_read:
             # Seek to first initial in filename
             file_to_read.seek(
-                self.blocks[args.block]+HydroThunder.FieldData.split_offset)
+                self.blocks[args.block]+FieldData.split_offset)
             split = 0
-            while split < HydroThunder.FieldData.split_count:
+            while split < FieldData.split_count:
                 split_1 = btime(file_to_read.read(4))
                 split_2 = btime(file_to_read.read(4))
                 split_3 = btime(file_to_read.read(4))
@@ -156,7 +156,7 @@ class Drive:
                 # Seek to block
                 file_to_read.seek(read_drive.blocks[args.block])
                 file_to_write.seek(write_drive.blocks[args.block])
-                for section, byte_count in HydroThunder.FieldData.section_bytes.items():
+                for section, byte_count in FieldData.section_bytes.items():
                     if section == "splits" and read_drive.split_bytes:
                         file_to_write.write(read_drive.split_bytes)
                         file_to_read.seek(byte_count, 1)

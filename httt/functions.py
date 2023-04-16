@@ -6,7 +6,7 @@ import os
 import struct
 import datetime
 import csv
-from .data import HydroThunder
+from .data import FieldData
 
 
 def write_raw(args, read_drive):
@@ -25,7 +25,7 @@ def write_raw(args, read_drive):
     with open(read_drive.filename, "rb") as file_to_read:
         with open(write_filename, "wb") as file_to_write:
             file_to_read.seek(read_drive.blocks[args.block])
-            for section, byte_count in HydroThunder.FieldData.section_bytes.items():
+            for section, byte_count in FieldData.section_bytes.items():
                 if section == "splits" and read_drive.split_bytes:
                     file_to_write.write(read_drive.split_bytes)
                     file_to_read.seek(byte_count, 1)
@@ -49,7 +49,7 @@ def checksum_calc(drive, args):
         file_to_check.seek(drive.blocks[args.block])
         header = file_to_check.read(8)
 
-        if header != HydroThunder.FieldData.header:
+        if header != FieldData.header:
             print(
                 f"ERROR: Bad header [{header.hex(' ')}] @ {hex(drive.blocks[args.block])}"
             )
@@ -58,9 +58,9 @@ def checksum_calc(drive, args):
         checksum_stored = file_to_check.read(4)
         file_to_check.read(4)
 
-        checksum = HydroThunder.FieldData.checksum_seed
+        checksum = FieldData.checksum_seed
         parity = 0
-        int_read = int(HydroThunder.FieldData.size/4)
+        int_read = int(FieldData.size/4)
         for _ in range(int_read):
             next_int_bytes = file_to_check.read(4)
             next_int = int.from_bytes(next_int_bytes, "little", signed=False)
@@ -78,7 +78,7 @@ def checksum_calc(drive, args):
         checksum = checksum + parity + args.lsb_offset  # Use mask to set parity bit
 
         file_to_check.seek(
-            drive.blocks[args.block]+HydroThunder.FieldData.checksum_offset)
+            drive.blocks[args.block]+FieldData.checksum_offset)
         file_to_check.write(checksum.to_bytes(4, "little", signed=False))
 
         print("Checksum:")

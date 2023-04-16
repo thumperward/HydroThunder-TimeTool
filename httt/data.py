@@ -41,21 +41,21 @@ class HydroThunder:
         130: "End"
     }
 
-    class FieldData:
-        """
-        Field data.
-        """
-        start_offset = [530432, 333824]  # In bytes from true end of drive
-        size = 8192  # Rough size rounded up to nice number
-        # Always present
-        header = bytearray(b'\x01\x00\x00\x00\x98\xba\xdc\xfe')
-        checksum_offset = 12  # Bytes from data start to checksum
-        checksum_seed = 0xFEDCBAF2
-        section_bytes = {"header": 12, "checksum": 4, "static1": 4, "config": 360,
-                         "times": 1040, "static2": 4, "splits": 260, "audit": 6508}
-        config_offset = 20
-        times_offset = 380
-        time_count = 130
-        split_offset = 1424
-        split_count = 13
-        audit_offset = 1684
+class FieldData:
+    """
+    Field data.
+    """
+    start_offset = [530432, 333824]  # In bytes from true end of drive
+    size = 8192  # Rough size rounded up to nice number
+    # Always present
+    header = bytearray(b'\x01\x00\x00\x00\x98\xba\xdc\xfe')
+    checksum_offset = 12  # Bytes from data start to checksum
+    checksum_seed = 0xFEDCBAF2
+    section_bytes = {"header": 12, "checksum": 4, "static1": 4, "config": 360,
+                        "times": 1040, "static2": 4, "splits": 260, "audit": 6508}
+    config_offset = 20
+    times_offset = 380
+    time_count = 130
+    split_offset = 1424
+    split_count = 13
+    audit_offset = 1684
