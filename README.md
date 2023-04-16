@@ -103,8 +103,9 @@ further reverse engineering required to determine this.
 
 ### `Hud_SplitTimes`
 
-|                seconds : single float                 |
-|-------------------------------------------------------| | byte 0      | byte 1      | byte 2      | byte 3      |
+| seconds : single float |  |  |  |
+| - | - | - | - |
+| byte 0      | byte 1      | byte 2      | byte 3      |
 
 |'Ship Graveyard' split times |  'Lost Island' split times  | ... |'LOOP3' split times     |
 |--------------------------------------|--------------------------------------|-----|--------------------------------------|
