@@ -4,7 +4,7 @@ Drive structure.
 
 import csv
 from .data import HydroThunder, FieldData
-from .functions import get_file_size, btime, timeb
+from .functions import get_file_size, btime, timeb, generic_write
 
 
 class Drive:
@@ -15,18 +15,16 @@ class Drive:
     def __init__(self, filename, args):
         # May be filepath, drive block device, or raw
         self.filename = str(filename)
-        self.size = int(get_file_size(self.filename))
-        self.raw = self.size <= FieldData.size
+        size = int(get_file_size(self.filename))
+        self.raw = size <= FieldData.size
 
         self.blocks = [
-            0 if self.raw else self.size -
-            FieldData.start_offset[0],
-            0 if self.raw else self.size -
-            FieldData.start_offset[1],
+            0 if self.raw else size - FieldData.start_offset[0],
+            0 if self.raw else size - FieldData.start_offset[1],
         ]
 
         print(
-            f"Reading drive: {self.filename}\nSize: {self.size}\n"
+            f"Reading drive: {self.filename}\nSize: {size}\n"
             f"Raw: {self.raw}\nBlock Addr: {self.blocks[args.block]}"
         )
         self.times = None
@@ -72,13 +70,6 @@ class Drive:
         with open(csv_file, newline='', encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile)
             self.times.extend(iter(reader))
-        self.byte_times(args)
-        # print(str(self.times))
-
-    def byte_times(self, args):
-        """
-        get time bytes.
-        """
         self.time_bytes = bytearray()
         if self.times is None:
             self.read_times(args)
@@ -87,9 +78,7 @@ class Drive:
             self.time_bytes += HydroThunder.iboats[row["Boat"]]
             self.time_bytes += row["Initials"].ljust(3).encode("ascii")
             self.time_bytes += timeb(row["Timestamp"])
-
-        return self.time_bytes
-        # print(self.time_bytes.hex(" "))
+        # print(str(self.times))
 
     def read_splits(self, args):
         """
@@ -147,26 +136,8 @@ class Drive:
         return self.split_bytes
         # print(self.split_bytes.hex(" "))
 
-    def write(self, read_drive, write_drive, args):
+    def write(self, read_drive, args):
         """
         Write to drive.
         """
-        with open(read_drive.filename, "rb") as file_to_read:
-            with open(self.filename, "r+b") as file_to_write:
-                # Seek to block
-                file_to_read.seek(read_drive.blocks[args.block])
-                file_to_write.seek(write_drive.blocks[args.block])
-                for section, byte_count in FieldData.section_bytes.items():
-                    if section == "splits" and read_drive.split_bytes:
-                        file_to_write.write(read_drive.split_bytes)
-                        file_to_read.seek(byte_count, 1)
-                    elif (
-                        section == "splits"
-                        or section == "times"
-                        and read_drive.time_bytes is None
-                        or section != "times"
-                    ):
-                        file_to_write.write(file_to_read.read(byte_count))
-                    else:
-                        file_to_write.write(read_drive.time_bytes)
-                        file_to_read.seek(byte_count, 1)
+        generic_write(read_drive.filename, self.filename, args)

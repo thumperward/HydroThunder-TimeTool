@@ -9,22 +9,15 @@ import csv
 from .data import FieldData
 
 
-def write_raw(args, read_drive):
+def generic_write(read_drive, write_drive, args):
     """
-    Write data directly to a raw device.
+    Write to file.
     """
-    write_filename = args.write_raw
-    # if os.path.isfile(write_filename):
-    #    # Update existing file
-    #    with open(read_drive.filename, "rb") as r:
-    #        with open(write_filename, "r+b") as w:
-    #            #TODO - Add update file in place with minimal writes
-    #            print("nope")
-    # else:
-    #     Write new file
     with open(read_drive.filename, "rb") as file_to_read:
-        with open(write_filename, "wb") as file_to_write:
+        with open(write_drive, "r+b") as file_to_write:
+            # Seek to block
             file_to_read.seek(read_drive.blocks[args.block])
+            file_to_write.seek(write_drive.blocks[args.block])
             for section, byte_count in FieldData.section_bytes.items():
                 if section == "splits" and read_drive.split_bytes:
                     file_to_write.write(read_drive.split_bytes)
@@ -39,6 +32,22 @@ def write_raw(args, read_drive):
                 else:
                     file_to_write.write(read_drive.time_bytes)
                     file_to_read.seek(byte_count, 1)
+
+
+def write_raw(args, write_drive):
+    """
+    Write data directly to a raw device.
+    """
+    write_filename = args.write_raw
+    # if os.path.isfile(write_filename):
+    #    # Update existing file
+    #    with open(write_drive.filename, "rb") as r:
+    #        with open(write_filename, "r+b") as w:
+    #            #TODO - Add update file in place with minimal writes # pylint: disable=fixme
+    #            print("nope")
+    # else:
+    #     Write new file
+    generic_write(write_drive.filename, write_filename, args)
 
 
 def checksum_calc(drive, args):

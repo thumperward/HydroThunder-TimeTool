@@ -59,15 +59,7 @@ def print_usage():
     parser.add_argument('--lsb_offset', default=0, type=int,
                         help='Fine tune checksum LSB value which can slightly vary')
 
-    return parser.parse_args()
-
-
-def main():
-    """
-    Main function.
-    """
-    # Run argument parsing
-    args = print_usage()
+    args = parser.parse_args()
 
     if args.boats:
         for boat in HydroThunder.iboats:
@@ -81,6 +73,16 @@ def main():
 
     if not (args.read or args.write or args.write_raw):
         print_input_error()
+
+    return args
+
+
+def main():
+    """
+    Main function.
+    """
+    # Run argument parsing
+    args = print_usage()
 
     write_drive = Drive(args.write, args) if args.write else None
     read_drive = Drive(args.read, args) if args.read else Drive(
@@ -104,9 +106,9 @@ def main():
                 "Track", "Split 1", "Split 2", "Split 3", "Split 4", "Split 5"], args.splits)
 
     if args.write:
-        write_drive.write(read_drive, write_drive, args)
+        write_drive.write(read_drive, args)
         checksum_calc(write_drive, args)
 
     if args.write_raw:
-        write_raw(args, read_drive)
+        write_raw(args, write_drive)
         checksum_calc(Drive(args.write_raw, args), args)
