@@ -3,7 +3,7 @@ Field data structure.
 """
 
 
-class HydroThunder:
+class HydroThunder:  # pylint: disable=too-few-public-methods
     """
     General data.
     """
@@ -41,7 +41,8 @@ class HydroThunder:
         130: "End"
     }
 
-class FieldData:
+
+class FieldData:  # pylint: disable=too-few-public-methods
     """
     Field data.
     """
@@ -52,7 +53,7 @@ class FieldData:
     checksum_offset = 12  # Bytes from data start to checksum
     checksum_seed = 0xFEDCBAF2
     section_bytes = {"header": 12, "checksum": 4, "static1": 4, "config": 360,
-                        "times": 1040, "static2": 4, "splits": 260, "audit": 6508}
+                     "times": 1040, "static2": 4, "splits": 260, "audit": 6508}
     config_offset = 20
     times_offset = 380
     time_count = 130
