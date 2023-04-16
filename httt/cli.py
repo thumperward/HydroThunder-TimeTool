@@ -1,8 +1,5 @@
-#!/usr/bin/python3
-
 """
-Tool for exporting and importing high score times from Hydro Thunder Arcade as
-CSV files.
+CLI parser.
 """
 
 import sys
