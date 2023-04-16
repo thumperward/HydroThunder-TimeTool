@@ -53,9 +53,9 @@ def print_usage():
 
     # Helpful info options
     parser.add_argument('-b', '--boats', action='store_true',
-                        help='List boat names in game\'s stored order')
+                        help="List boat names in game's stored order")
     parser.add_argument('-m', '--map_names', action='store_true',
-                        help='List track names in game\'s stored order')
+                        help="List track names in game's stored order")
     parser.add_argument('--lsb_offset', default=0, type=int,
                         help='Fine tune checksum LSB value which can slightly vary')
 
@@ -79,7 +79,7 @@ def main():
             print(track)
         sys.exit(0)
 
-    if not args.read and not args.write and not args.write_raw:
+    if not (args.read or args.write or args.write_raw):
         print_input_error()
 
     write_drive = Drive(args.write, args) if args.write else None
