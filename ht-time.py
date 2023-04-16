@@ -132,13 +132,16 @@ class Drive:
     def __init__(self, filename):
         self.filename = str(filename) # May be filepath, drive block device, or raw
         self.size = int(get_file_size(self.filename))
-        self.raw = False if self.size > ht.data.size else True
+        self.raw = self.size <= ht.data.size
 
-        self.blocks = [ self.size - ht.data.start_offset[0] if not self.raw else 0 ,
-                self.size - ht.data.start_offset[1] if not self.raw else 0]
+        self.blocks = [
+            0 if self.raw else self.size - ht.data.start_offset[0],
+            0 if self.raw else self.size - ht.data.start_offset[1],
+        ]
 
-        print ("Reading drive: {}\nSize: {}\nRaw: {}\nBlock Addr: {}".format(
-            self.filename,self.size,self.raw,self.blocks[args.block]))
+        print(
+            f"Reading drive: {self.filename}\nSize: {self.size}\nRaw: {self.raw}\nBlock Addr: {self.blocks[args.block]}"
+        )
         self.times = None
         self.time_bytes = None
         self.splits = None
@@ -159,7 +162,7 @@ class Drive:
                 timestamp=btime(f.read(4))
 
                 self.times.append({"Track":ht.tracks[scores-(scores % 10)],"Initials":initials,"Boat":ht.boats[boat],"Timestamp":timestamp})
-                scores=scores+1
+                scores += 1
 
         #print(str(self.times))
 
@@ -168,9 +171,7 @@ class Drive:
         self.times=[]
         with open(csv_file, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
-            for row in reader:
-                self.times.append(row)
-
+            self.times.extend(iter(reader))
         self.byte_times()
         #print(str(self.times))
 
@@ -200,7 +201,7 @@ class Drive:
                 split_5=btime(f.read(4))
 
                 self.splits.append({"Track":ht.tracks[split*10],"Split 1":split_1,"Split 2":split_2,"Split 3":split_3,"Split 4":split_4,"Split 5":split_5})
-                split=split+1
+                split += 1
 
         #print(str(self.splits))
  
@@ -208,9 +209,7 @@ class Drive:
         self.splits=[]
         with open(csv_file, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
-            for row in reader:
-                self.splits.append(row)
-
+            self.splits.extend(iter(reader))
         self.byte_splits()
         #print(str(self.splits))
 
@@ -236,20 +235,19 @@ class Drive:
                 r.seek(read_drive.blocks[args.block])
                 w.seek(write_drive.blocks[args.block])
                 for section, byte_count in ht.data.section_bytes.items():
-                    if section == "times":
-                        if read_drive.time_bytes is not None:
-                            w.write(read_drive.time_bytes)
-                            r.seek(byte_count,1)
-                        else:
-                            w.write(r.read(byte_count))
-                    elif section == "splits":
-                        if read_drive.split_bytes is not None:
-                            w.write(read_drive.split_bytes)
-                            r.seek(byte_count,1)
-                        else:
-                            w.write(r.read(byte_count))
-                    else:
+                    if section == "splits" and read_drive.split_bytes is not None:
+                        w.write(read_drive.split_bytes)
+                        r.seek(byte_count,1)
+                    elif (
+                        section == "splits"
+                        or section == "times"
+                        and read_drive.time_bytes is None
+                        or section != "times"
+                    ):
                         w.write(r.read(byte_count))
+                    else:
+                        w.write(read_drive.time_bytes)
+                        r.seek(byte_count,1)
 
 
 
@@ -260,7 +258,9 @@ def checksum_calc(drive):
         header = f.read(8)
 
         if (header != ht.data.header):
-            print("ERROR: Bad header [{}] @ {}".format(header.hex(' '), hex(drive.blocks[args.block])))
+            print(
+                f"ERROR: Bad header [{header.hex(' ')}] @ {hex(drive.blocks[args.block])}"
+            )
 
         f.read(4)
         checksum_stored=f.read(4)
@@ -269,7 +269,7 @@ def checksum_calc(drive):
         checksum=ht.data.checksum_seed
         parity=0
         int_read=int(ht.data.size/4)
-        for count in range(int_read):
+        for _ in range(int_read):
             next_int_bytes = f.read(4)
             next_int = int.from_bytes(next_int_bytes, "little", signed=False)
             checksum = (checksum+next_int)
@@ -279,17 +279,17 @@ def checksum_calc(drive):
             #parity = parity+(next_int % 0x1)# Use mask to force overflow
             if next_int % 2 == 0:
                 parity = not(parity)
-        
+
         if checksum % 2 == 0:
             parity = not(parity)
-        
+
         checksum = checksum + parity + args.lsb_offset# Use mask to set parity bit
 
         f.seek(drive.blocks[args.block]+ht.data.checksum_offset)
         f.write(checksum.to_bytes(4,"little", signed=False))
 
         print("Checksum:")
-        print("Found: {}".format(checksum_stored.hex(" ")))
+        print(f'Found: {checksum_stored.hex(" ")}')
         print("Wrote: {}".format(checksum.to_bytes(4,"little", signed=False).hex(" ")))
 
         return checksum.to_bytes(4,"little", signed=False).hex(" ")
@@ -307,30 +307,32 @@ read_drive = None
 write_drive = None
 
 if args.write is not None:
-    print("Init Write: {}".format(args.write))
+    print(f"Init Write: {args.write}")
     write_drive = Drive(args.write)
     if args.read is None:
-        print("Init Read: {}".format(args.write))
+        print(f"Init Read: {args.write}")
         read_drive = Drive(args.write)
 else:
     write_drive = None
 
 if args.read is not None or args.write is not None:
     if read_drive is None:
-        print("Init Read: {}".format(args.read))
+        print(f"Init Read: {args.read}")
         read_drive = Drive(args.read)
     read_drive.read_times()
     read_drive.read_splits()
 
-    if (args.times is not None) and (args.write is None) and (args.write_raw is None):
-        csv_write(read_drive.times, ["Track", "Initials","Boat","Timestamp"], args.times)
-    elif args.times is not None:
-        read_drive.load_times(args.times)
+    if args.times is not None:
+        if args.write is None and args.write_raw is None:
+            csv_write(read_drive.times, ["Track", "Initials","Boat","Timestamp"], args.times)
+        else:
+            read_drive.load_times(args.times)
 
-    if args.splits is not None and (args.write is None and args.write_raw is None):
-        csv_write(read_drive.splits, ["Track","Split 1","Split 2","Split 3","Split 4","Split 5"], args.splits)
-    elif args.splits is not None:
-        read_drive.load_splits(args.splits)
+    if args.splits is not None:
+        if args.write is None and args.write_raw is None:
+            csv_write(read_drive.splits, ["Track","Split 1","Split 2","Split 3","Split 4","Split 5"], args.splits)
+        else:
+            read_drive.load_splits(args.splits)
 
     # Add else to use write drive as read if data CSV provided
 else:
@@ -346,35 +348,24 @@ if args.write is not None:
 
 if args.write_raw is not None:
     write_filename=args.write_raw
-#    if os.path.isfile(write_filename):
-#        # Update existing file
-#        with open(read_drive.filename, "rb") as r:
-#            with open(write_filename, "r+b") as w:
-#                #TODO - Add update file in place with minimal writes
-#                print("nope")
-#    else:
-        # Write new file
     with open(read_drive.filename, "rb") as r:
         with open(write_filename, "wb") as w:
             # Seek to block
             r.seek(read_drive.blocks[args.block])
             for section, byte_count in ht.data.section_bytes.items():
-                if section == "times":
-                    if read_drive.time_bytes is not None:
-                        w.write(read_drive.time_bytes)
-                        r.seek(byte_count,1)
-                    else:
-                        w.write(r.read(byte_count))
-                elif section == "splits":
-                    if read_drive.split_bytes is not None:
-                        w.write(read_drive.split_bytes)
-                        r.seek(byte_count,1)
-                    else:
-                        w.write(r.read(byte_count))
-                else:
+                if section == "splits" and read_drive.split_bytes is not None:
+                    w.write(read_drive.split_bytes)
+                    r.seek(byte_count,1)
+                elif (
+                    section == "splits"
+                    or section == "times"
+                    and read_drive.time_bytes is None
+                    or section != "times"
+                ):
                     w.write(r.read(byte_count))
-
-
+                else:
+                    w.write(read_drive.time_bytes)
+                    r.seek(byte_count,1)
     checksum_calc(Drive(write_filename))
 
 
@@ -401,7 +392,7 @@ sys.exit(0)
 time = ""
 for score_pos in scores_start:
     scores=0
-	
+
 	# Write data
     if data_csv:
         with open(filename, "r+b") as f:
@@ -414,15 +405,14 @@ for score_pos in scores_start:
                     f.write(inverse_boat_lut[row['Boat']])
                     f.write(row['Initials'].encode("ascii"))
                     f.write(struct.pack('<f', timedelta.total_seconds()))
-	
-	# Read data
+
     else:
         print ("")
         print ("-------------------------------------------------------")
         print ("Track Leaderboard Entries")
         with open(filename, "rb") as f:
             f.seek(score_pos) # Seek to first initial in filename
-            with open(filename+".csv", 'w', newline='') as csvfile:
+            with open(f"{filename}.csv", 'w', newline='') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',',
                                     quotechar='|', quoting=csv.QUOTE_MINIMAL)
                 writer.writerow(["Track","Initials","Boat","Time"])
@@ -439,26 +429,21 @@ for score_pos in scores_start:
                     timestamp=str(datetime.timedelta( seconds=round(struct.unpack('<f', time)[0],2) ))[2:][:8]
                     writer.writerow([track_order[scores-(scores % 10)],initials,boat_LUT[boat],timestamp])
                     print("{:15s} | {:3s} | {:20s} | {:8s}".format(track_order[scores-(scores % 10)], initials, boat_LUT[boat], timestamp))
-                    scores=scores+1
-                    
+                    scores += 1
+
                 print ("")
                 print ("-------------------------------------------------------")
                 print ("Track Personal Best Split Time Entries")
-				
+
                 _ = f.read(4) # discard unknown word, maybe a terminator, have to check if it changes
-                    
-                timesplit = 0
+
                 track = -10
-                while timesplit < 65:
+                for timesplit in range(65):
                     if (timesplit % 5 == 0):
                         print ("-------------------------------------------------------")
                         track = track + 10
                     splittime = f.read(4) # read four bytes for float representing time in seconds
                     formattedsplit=str(datetime.timedelta( seconds=round(struct.unpack('<f', splittime)[0],2) ))[2:][:8]
-                    if formattedsplit == "03:45.67":
-                        unusedflag = "UNUSED"
-                    else:
-                        unusedflag = ""
+                    unusedflag = "UNUSED" if formattedsplit == "03:45.67" else ""
                     checkpointnum = (timesplit % 5) + 1
                     print("{:15s} | {:1d} | {:8s} | {}".format(track_order[track], checkpointnum, formattedsplit, unusedflag))
-                    timesplit=timesplit+1
