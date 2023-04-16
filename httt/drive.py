@@ -2,48 +2,9 @@
 Drive structure.
 """
 
-import os
-import struct
-import datetime
 import csv
 from .data import HydroThunder
-
-
-def timeb(time_seconds):
-    """
-    Convert time to bytes.
-    """
-
-    return struct.pack(
-        '<f',
-        (
-            datetime.datetime.strptime(time_seconds.strip(
-            ), "%M:%S.%f") - datetime.datetime(1900, 1, 1)
-        ).total_seconds()
-    )
-
-
-def btime(time_bytes):
-    """
-    Convert bytes to time.
-    """
-
-    return str(
-        datetime.timedelta(seconds=round(
-            struct.unpack('<f', time_bytes)[0], 2))
-    )[2:][:8]
-
-
-def get_file_size(filename):
-    """
-    Get the file size by seeking at end.
-    """
-
-    file_descriptor = os.open(filename, os.O_RDONLY)
-    try:
-        return os.lseek(file_descriptor, 0, os.SEEK_END)
-    finally:
-        os.close(file_descriptor)
+from .functions import get_file_size, btime, timeb
 
 
 class Drive:
