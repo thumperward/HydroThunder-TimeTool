@@ -86,29 +86,39 @@ further reverse engineering required to determine this.
 
 ### Track and AI difficultly
 
+Entry structure:
+
 | diff : uint8 | null (0x00)  | null (0x00)  | null (0x00)  |
 |--------------|--------------|--------------|--------------|
 | byte 0       | byte 1       | byte 2       | byte 3       |
 
-#### `Hi_Score_Table`
+### `Hi_Score_Table`
+
+Entry structure:
 
 | boat : byte |           initials : char[3]            |                seconds : single float                 |
 |-------------|-----------------------------------------|-------------------------------------------------------|
 | byte 0      | byte 1      | byte 2      | byte 3      | byte 4      | byte 5      | byte 6      | byte 7      |
 
+Table structure:
+
 |     'Ship Graveyard' high scores     |       'Lost Island' high scores      |... |          'LOOP3' high scores         |
-|--------------------------------------|--------------------------------------|-----|--------------------------------------|
+| - | - | - | - |
 |    1st   |    2nd   | ... |   10th   |    1st   |    2nd   | ... |   10th   | ... |    1st   |    2nd   | ... |   10th   |
 |0|123|4567|0|123|4567| ... |0|123|4567|0|123|4567|0|123|4567| ... |0|123|4567| ... |0|123|4567|0|123|4567| ... |0|123|4567|
 
 ### `Hud_SplitTimes`
 
-| seconds : single float |  |  |  |
-| - | - | - | - |
+Entry structure:
+
+|                seconds : single float    | | |        |
+|-------------|-------------|-------------|-------------|
 | byte 0      | byte 1      | byte 2      | byte 3      |
 
-|'Ship Graveyard' split times |  'Lost Island' split times  | ... |'LOOP3' split times     |
-|--------------------------------------|--------------------------------------|-----|--------------------------------------|
+Table structure:
+
+|'Ship Graveyard' split times |  'Lost Island' split times  | ... |     'LOOP3' split times     |
+| - | - | - | - |
 |Split 1|Split 2| ... |Split 5|Split 1|Split 2| ... |Split 5| ... |Split 1|Split 2| ... |Split 5|
 | 0123  | 0123  | ... | 0123  | 0123  | 0123  | ... | 0123  | ... | 0123  | 0123  | ... | 0123  |
 
@@ -122,7 +132,6 @@ further reverse engineering required to determine this.
 ## Roadmap
 
 * More documentation of hidden data
-
 * Provide exmaples of data
 * Determine how data validity check is done and impliment it for modified
   scores
